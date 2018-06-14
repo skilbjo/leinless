@@ -1,0 +1,4 @@
+{:deps
+ {org.clojure/tools.logging {:mvn/version "0.4.0"}
+  clj-logging-config        {:mvn/version "1.9.12"}
+  me.raynes/fs              {:mvn/version "1.4.6"}}}

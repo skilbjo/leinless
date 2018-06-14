@@ -1,0 +1,67 @@
+#!/usr/bin/env clj
+
+; library & classpath dependencies, config, and utils
+(require '[clojure.java.io :as io])
+(require '[clojure.string :as string])
+(require '[clojure.pprint :as pprint])
+(require '[me.raynes.fs :as fs])
+(require '[clojure.tools.logging :as log])
+(require '[clj-logging-config.log4j :as log4j])
+(import java.io.File)
+
+(log4j/set-logger! :pattern "%p %d - %m%n")
+
+(defn print-it [coll]
+  (pprint/pprint coll)
+  coll)
+
+(def local-dir "/Users/johnskilbeck/Desktop/some-dir")
+
+; main
+(defn ^:private local-files-path [dir]
+  (->> dir
+       io/file
+       file-seq
+       (filter #(.isFile %))
+       (mapv str)))
+
+(defn ^:private get-file-or-dir-name [path]
+  (->> path
+       File.
+       .getName
+       .toString))
+
+(defn ^:private dir-name [path]
+  (->> path
+       File.
+       .getParent
+       .toString
+       fs/base-name))
+
+(defn ^:private upload-a-single-file! [local-dir file-to-upload]
+  (let [base-local          (get-file-or-dir-name local-dir)
+        dir-of-file-to-upload (dir-name file-to-upload)
+        name-of-file        (get-file-or-dir-name file-to-upload)
+        same-folder?        (= base-local dir-of-file-to-upload)
+        ]
+    (if same-folder?
+      (log/info "Uploading " name-of-file
+                " to " base-local)
+      (log/info "Uploading " name-of-file
+                " to " (str dir-of-file-to-upload "/" name-of-file)))))
+
+(defn ^:private split-folders [dir]
+  (->> (string/split dir #"/")
+       (remove empty?)
+       (mapv str)))
+
+(defn main []
+  (let [local-files (local-files-path local-dir)]
+
+    (->> local-files
+         (map #(upload-a-single-file! local-dir %))
+         doall)
+
+    (shutdown-agents)))
+
+(main)
